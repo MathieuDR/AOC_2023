@@ -35,16 +35,21 @@ defmodule AdventOfCode.Day05 do
     [from, _, to] =
       String.trim(map_info) |> String.split(" ") |> List.first() |> String.split("-")
 
-    values = values |> Enum.map(&parse_value/1) |> Enum.reduce(%{}, &Map.merge/2)
+    values = values |> Enum.map(&parse_value/1)
 
     %{from: from, to: to, values: values}
   end
 
+  def calculate_shift(%{start_value: start, end_value: to, shift: shift}, value)
+      when value >= start and value <= to,
+      do: {:match, value - start + shift}
+
+  def calculate_shift(_, _value), do: :nomatch
+
   def parse_value(value) do
     [x, y, z] = String.split(value, " ", trim: true) |> Enum.map(&String.to_integer/1)
 
-    Enum.zip(y..(y + z - 1), x..(x + z - 1))
-    |> Enum.reduce(%{}, fn {from, to}, acc -> Map.put_new(acc, from, to) end)
+    %{start_value: y, end_value: y + z - 1, shift: x}
   end
 
   def get_location(_, "location", value), do: value
@@ -54,25 +59,23 @@ defmodule AdventOfCode.Day05 do
 
     next_value =
       case get_in(map, [current_state, next_state]) do
-        nil -> raise("something happened")
-        %{} = value_map -> Map.get(value_map, current_value, current_value)
+        nil ->
+          raise("something happened")
+
+        [_ | _] = values ->
+          Enum.map(values, &calculate_shift(&1, current_value))
+          |> Enum.reject(&(&1 == :nomatch))
+          |> case do
+            [] -> current_value
+            [{:match, value}] -> value
+            _ -> raise "Something bad happened"
+          end
       end
 
-    IO.puts("#{current_state}->#{next_state} : #{current_value}->#{next_value}")
+    # IO.puts("#{current_state}->#{next_state} : #{current_value}->#{next_value}")
 
     get_location(map, next_state, next_value)
   end
-
-  # def get_next_value(_, "location", current_value), do: current_value
-  #
-  # def get_next_value(map, current_state, current_value) do
-  #   next_state = next_state(current_state)
-  #
-  #   case get_in(map, [current_state, next_state]) do
-  #     nil -> raise("something happened")
-  #     %{} = value_map -> Map.get(value_map, current_value, current_value)
-  #   end
-  # end
 
   @states ~w[seed soil fertilizer water light temperature humidity location]
   @states_indexed Enum.with_index(@states)
