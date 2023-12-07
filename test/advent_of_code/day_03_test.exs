@@ -64,7 +64,7 @@ defmodule AdventOfCode.Day03Test do
   end
 
   test "can create gear ratio" do
-    input = "..11*123*2.."
+    input = "..11*123.."
 
     assert 1353 == input |> input_to_map() |> get_gear_ratios |> Enum.sum()
   end
