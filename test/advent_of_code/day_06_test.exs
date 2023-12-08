@@ -3,12 +3,21 @@ defmodule AdventOfCode.Day06Test do
 
   import AdventOfCode.Day06
 
-  @tag :skip
+  @example """
+      Time:      7  15   30
+      Distance:  9  40  200
+  """
+
+  test "parse" do
+    assert [%{time: 7, record: 9}, %{time: 15, record: 40}, %{time: 30, record: 200}] =
+             parse_input(@example)
+  end
+
   test "part1" do
-    input = nil
+    input = @example
     result = part1(input)
 
-    assert result
+    assert result == 288
   end
 
   @tag :skip
