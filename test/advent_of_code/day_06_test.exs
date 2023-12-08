@@ -13,6 +13,10 @@ defmodule AdventOfCode.Day06Test do
              parse_input(@example)
   end
 
+  test "parse part 2" do
+    assert [%{time: 71530, record: 940_200}] = parse_input_part_2(@example)
+  end
+
   test "part1" do
     input = @example
     result = part1(input)
@@ -20,11 +24,10 @@ defmodule AdventOfCode.Day06Test do
     assert result == 288
   end
 
-  @tag :skip
   test "part2" do
-    input = nil
+    input = @example
     result = part2(input)
 
-    assert result
+    assert result == 71503
   end
 end
