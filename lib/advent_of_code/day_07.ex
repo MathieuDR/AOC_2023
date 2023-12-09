@@ -2,14 +2,29 @@ defmodule AdventOfCode.Day07 do
   def part1(args) do
     args
     |> parse()
-    |> Enum.map(&score_hand/1)
+    |> Enum.map(fn %{cards: cards} = hand ->
+      Map.put_new(hand, :cards_for_type, cards)
+      |> score_hand()
+    end)
     |> Enum.sort(&sort_hands/2)
     |> Enum.with_index()
     |> Enum.map(&calculate_hand_winning/1)
     |> Enum.sum()
   end
 
-  def part2(_args) do
+  def part2(args) do
+    args
+    |> parse()
+    |> Enum.map(fn %{cards: cards} = hand ->
+      replaced_cards = replace_jokers(cards, Enum.count(cards, &(&1 == 11)))
+
+      Map.put_new(hand, :cards_for_type, replaced_cards)
+      |> score_hand()
+    end)
+    |> Enum.sort(&sort_hands/2)
+    |> Enum.with_index()
+    |> Enum.map(&calculate_hand_winning/1)
+    |> Enum.sum()
   end
 
   def parse(input) do
@@ -45,7 +60,7 @@ defmodule AdventOfCode.Day07 do
     Map.put_new(hand, :type, {type, type_score})
   end
 
-  def determine_type(%{cards: cards}) do
+  def determine_type(%{cards_for_type: cards}) do
     uniques = cards |> Enum.uniq()
 
     case Enum.count(uniques) do
@@ -108,4 +123,84 @@ defmodule AdventOfCode.Day07 do
   end
 
   def calculate_hand_winning({%{bet: bet}, idx}), do: bet * (1 + idx)
+
+  def replace_jokers(_cards, 5), do: [14, 14, 14, 14, 14]
+
+  def replace_jokers(cards, 4) do
+    [card] = cards |> Enum.reject(&(&1 == 11))
+    [card, card, card, card, card]
+  end
+
+  def replace_jokers(cards, 3), do: replace_jokers_with_highest(cards)
+
+  def replace_jokers(cards, 2) do
+    uniques =
+      cards
+      |> Enum.reject(&(&1 == 11))
+      |> Enum.uniq()
+
+    case uniques |> Enum.count() do
+      3 ->
+        replace_jokers_with_highest(cards)
+
+      _ ->
+        first = List.first(uniques)
+
+        case Enum.count(cards, &(&1 == first)) do
+          1 -> replace_jokers_with(cards, List.last(cards))
+          _ -> replace_jokers_with(cards, first)
+        end
+    end
+  end
+
+  def replace_jokers(cards, 1) do
+    uniques =
+      cards
+      |> Enum.reject(&(&1 == 11))
+      |> Enum.uniq()
+
+    case uniques |> Enum.count() do
+      4 ->
+        replace_jokers_with_highest(cards)
+
+      3 ->
+        replace_jokers_with(cards, find_pair(uniques, cards))
+
+      2 ->
+        f = List.first(uniques)
+
+        case Enum.count(cards, &(&1 == f)) do
+          1 -> replace_jokers_with(cards, List.last(uniques))
+          3 -> replace_jokers_with(cards, f)
+          2 -> replace_jokers_with(cards, Enum.max(uniques))
+        end
+
+      1 ->
+        replace_jokers_with(cards, List.first(uniques))
+    end
+  end
+
+  def replace_jokers(cards, 0), do: cards
+
+  def find_pair([c | rest], cards) do
+    case Enum.count(cards, &(&1 == c)) do
+      1 -> find_pair(rest, cards)
+      _ -> c
+    end
+  end
+
+  def replace_jokers_with_highest(cards) do
+    high = Enum.max(cards)
+    cards |> replace_jokers_with(high)
+  end
+
+  def replace_jokers_with(cards, card),
+    do:
+      Enum.map(
+        cards,
+        &case &1 do
+          11 -> card
+          _ -> &1
+        end
+      )
 end
