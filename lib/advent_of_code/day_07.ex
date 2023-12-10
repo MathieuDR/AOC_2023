@@ -18,7 +18,17 @@ defmodule AdventOfCode.Day07 do
     |> Enum.map(fn %{cards: cards} = hand ->
       replaced_cards = replace_jokers(cards, Enum.count(cards, &(&1 == 11)))
 
+      cards =
+        cards
+        |> Enum.map(fn c ->
+          case c do
+            11 -> 1
+            c -> c
+          end
+        end)
+
       Map.put_new(hand, :cards_for_type, replaced_cards)
+      |> Map.replace!(:cards, cards)
       |> score_hand()
     end)
     |> Enum.sort(&sort_hands/2)
@@ -59,6 +69,8 @@ defmodule AdventOfCode.Day07 do
 
     Map.put_new(hand, :type, {type, type_score})
   end
+
+  def determine_type(cards) when is_list(cards), do: determine_type(%{cards_for_type: cards})
 
   def determine_type(%{cards_for_type: cards}) do
     uniques = cards |> Enum.uniq()
@@ -147,7 +159,7 @@ defmodule AdventOfCode.Day07 do
         first = List.first(uniques)
 
         case Enum.count(cards, &(&1 == first)) do
-          1 -> replace_jokers_with(cards, List.last(cards))
+          1 -> replace_jokers_with(cards, List.last(uniques))
           _ -> replace_jokers_with(cards, first)
         end
     end
@@ -190,7 +202,7 @@ defmodule AdventOfCode.Day07 do
   end
 
   def replace_jokers_with_highest(cards) do
-    high = Enum.max(cards)
+    high = Enum.reject(cards, &(&1 == 11)) |> Enum.max()
     cards |> replace_jokers_with(high)
   end
 

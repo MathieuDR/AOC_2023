@@ -98,4 +98,79 @@ defmodule AdventOfCode.Day07Test do
 
     assert result == 5905
   end
+
+  describe "replace jokers" do
+    @j 11
+    test "all jokers go to A" do
+      cards = [@j, @j, @j, @j, @j]
+      assert [14, 14, 14, 14, 14] = replace_jokers(cards, cards |> count_jokers())
+    end
+
+    test "4 jokers makes 5 of a kind" do
+      cards = [@j, @j, 3, @j, @j]
+      assert [3, 3, 3, 3, 3] = replace_jokers(cards, cards |> count_jokers())
+    end
+
+    test "3 jokers and pair makes 5 of a kind" do
+      cards = [@j, 3, 3, @j, @j]
+      assert [3, 3, 3, 3, 3] = replace_jokers(cards, cards |> count_jokers())
+    end
+
+    test "3 jokers and 2 random makes 4 of a kind" do
+      cards = [@j, 3, 2, @j, @j]
+      assert [3, 3, 2, 3, 3] = replace_jokers(cards, cards |> count_jokers())
+    end
+
+    test "2 jokers and three of a kind makes 5 of a kind" do
+      cards = [@j, 2, 2, @j, 2]
+      assert [2, 2, 2, 2, 2] = replace_jokers(cards, cards |> count_jokers())
+    end
+
+    test "2 jokers and a 2 of a kind makes 4 of a kind" do
+      cards = [@j, 8, 2, @j, 2]
+      assert [2, 8, 2, 2, 2] = replace_jokers(cards, cards |> count_jokers())
+    end
+
+    test "2 jokers and 3 random cards 3 of a kind" do
+      cards = [@j, 1, 2, @j, 9]
+      assert [9, 1, 2, 9, 9] = replace_jokers(cards, cards |> count_jokers())
+    end
+
+    test "1 jokers and 4 random cards 2 of a kind" do
+      cards = [@j, 1, 2, 13, 9]
+      assert [13, 1, 2, 13, 9] = replace_jokers(cards, cards |> count_jokers())
+    end
+
+    test "1 jokers and 1 pair makes 3 of a kind" do
+      cards = [1, 13, @j, 13, 9]
+      assert [1, 13, 13, 13, 9] = replace_jokers(cards, cards |> count_jokers())
+    end
+
+    test "1 jokers and 2 pairs makes full house" do
+      cards = [2, 1, 2, 1, @j]
+      assert [2, 1, 2, 1, 2] = replace_jokers(cards, cards |> count_jokers())
+    end
+
+    test "1 jokers and 2 pairs makes full house with highest number" do
+      cards = [2, 10, 2, 10, @j]
+      assert [2, 10, 2, 10, 10] = replace_jokers(cards, cards |> count_jokers())
+    end
+
+    test "1 joker with 3 of a kind makes 4 of a kind" do
+      cards = [3, @j, 9, 9, 9]
+      assert [3, 9, 9, 9, 9] = replace_jokers(cards, cards |> count_jokers())
+    end
+
+    test "1 joker with 4 of a kind makes 5 of a kind" do
+      cards = [9, @j, 9, 9, 9]
+      assert [9, 9, 9, 9, 9] = replace_jokers(cards, cards |> count_jokers())
+    end
+
+    test "0 jokers does not replace anything" do
+      cards = [9, 3, 2, 1, 5]
+      assert [9, 3, 2, 1, 5] = replace_jokers(cards, cards |> count_jokers())
+    end
+
+    def count_jokers(cards), do: Enum.count(cards, &(&1 == @j))
+  end
 end
