@@ -8,7 +8,53 @@ defmodule AdventOfCode.Day08 do
     |> Enum.count()
   end
 
-  def part2(_args) do
+  def part2(input) do
+    %{instructions: instructions, map: maps} = parse(input)
+
+    starts =
+      Enum.filter(maps, fn {key, _} -> String.ends_with?(key, "A") end)
+      |> Enum.map(&elem(&1, 0))
+      |> IO.inspect()
+
+    Stream.cycle(instructions)
+    |> Stream.transform({0, starts}, fn instruction, {steps, acc} ->
+      acc
+      |> case do
+        -1 ->
+          {:halt, acc}
+
+        _ ->
+          acc = Enum.map(acc, fn position -> traverse(position, instruction, maps) end)
+          steps = steps + 1
+
+          if rem(steps, 5_000_000) == 0 do
+            IO.inspect(steps / 1_000_000, label: "steps (M)")
+          end
+
+          case reached_end?(acc) do
+            true ->
+              {[steps], {steps, -1}}
+
+            false ->
+              {[], {steps, acc}}
+          end
+      end
+    end)
+    |> Enum.to_list()
+    |> List.first()
+  end
+
+  def reached_end?(positions) do
+    Enum.count(positions, &String.ends_with?(&1, "Z")) == Enum.count(positions)
+  end
+
+  def traverse(position, instruction, map) do
+    {left, right} = map[position]
+
+    case instruction do
+      :left -> left
+      :right -> right
+    end
   end
 
   def traverse_to(_, destination, current_position, _, acc)
@@ -25,13 +71,7 @@ defmodule AdventOfCode.Day08 do
         [instruction | left_over_instructions],
         acc
       ) do
-    {left, right} = info[:map][current_position]
-
-    next_destination =
-      case instruction do
-        :left -> left
-        :right -> right
-      end
+    next_destination = traverse(current_position, instruction, info[:map])
 
     traverse_to(info, destination, next_destination, left_over_instructions, [
       next_destination | acc
@@ -64,7 +104,4 @@ defmodule AdventOfCode.Day08 do
     [left, right] = String.slice(rest, 1..8) |> String.split(", ")
     {key, {left, right}}
   end
-
-  # def get_next_instruction([], instructions), do: get_next_instruction(instructions, instructions)
-  # def get_next_instruction([head | tail], _instructions), do: {head, tail}
 end
