@@ -18,14 +18,7 @@ defmodule AdventOfCode.Day07 do
     |> Enum.map(fn %{cards: cards} = hand ->
       replaced_cards = replace_jokers(cards, Enum.count(cards, &(&1 == 11)))
 
-      cards =
-        cards
-        |> Enum.map(fn c ->
-          case c do
-            11 -> 1
-            c -> c
-          end
-        end)
+      cards = replace_jokers_with(cards, 1)
 
       Map.put_new(hand, :cards_for_type, replaced_cards)
       |> Map.replace!(:cards, cards)
