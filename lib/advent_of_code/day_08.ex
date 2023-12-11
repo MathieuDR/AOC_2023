@@ -11,37 +11,66 @@ defmodule AdventOfCode.Day08 do
   def part2(input) do
     %{instructions: instructions, map: maps} = parse(input)
 
-    starts =
-      Enum.filter(maps, fn {key, _} -> String.ends_with?(key, "A") end)
-      |> Enum.map(&elem(&1, 0))
-      |> IO.inspect()
+    starts = Enum.filter(maps, fn {key, _} -> String.ends_with?(key, "A") end)
 
-    Stream.cycle(instructions)
-    |> Stream.transform({0, starts}, fn instruction, {steps, acc} ->
-      acc
-      |> case do
-        -1 ->
-          {:halt, acc}
+    paths =
+      starts
+      |> Enum.map(fn {key, _} ->
+        traverse_until(instructions, maps, key, &String.ends_with?(&1, "Z"))
+        |> Enum.to_list()
+      end)
+      |> Enum.map(&{Enum.count(&1), &1})
 
-        _ ->
-          acc = Enum.map(acc, fn position -> traverse(position, instruction, maps) end)
-          steps = steps + 1
+    paths
+    |> Enum.map(&elem(&1, 0))
+    |> IO.inspect(label: "counts till path. Find LCM")
+    |> find_lcm()
+  end
 
-          if rem(steps, 5_000_000) == 0 do
-            IO.inspect(steps / 1_000_000, label: "steps (M)")
-          end
+  def find_lcm([a]), do: a
 
-          case reached_end?(acc) do
-            true ->
-              {[steps], {steps, -1}}
+  def find_lcm([a, b | rest]) do
+    gcf = find_gcf([a, b])
+    lcm = trunc(a * b / gcf)
+    find_lcm([lcm | rest])
+  end
 
-            false ->
-              {[], {steps, acc}}
-          end
+  def find_gcf(numbers) do
+    Enum.map(numbers, &(find_factors(&1) |> MapSet.new()))
+    |> Enum.reduce(fn set, acc ->
+      if is_nil(acc) do
+        set
+      else
+        MapSet.intersection(acc, set)
       end
     end)
-    |> Enum.to_list()
+    |> Enum.sort(:desc)
     |> List.first()
+  end
+
+  def find_factors(number) do
+    sqrt = :math.sqrt(number) |> trunc()
+
+    1..sqrt
+    |> Enum.flat_map(fn d ->
+      if rem(number, d) == 0 do
+        [d, trunc(number / d)]
+      else
+        []
+      end
+    end)
+  end
+
+  def traverse_until(instructions, map, current_position, end_fun) do
+    Stream.cycle(instructions)
+    |> Stream.transform(current_position, fn instruction, position ->
+      if end_fun.(position) do
+        {:halt, position}
+      else
+        next_position = traverse(position, instruction, map)
+        {[next_position], next_position}
+      end
+    end)
   end
 
   def reached_end?(positions) do
