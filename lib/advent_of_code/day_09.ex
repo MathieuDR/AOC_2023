@@ -10,7 +10,16 @@ defmodule AdventOfCode.Day09 do
     |> Enum.sum()
   end
 
-  def part2(_args) do
+  def part2(args) do
+    args
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn line ->
+      String.split(line, " ", trim: true)
+      |> Enum.map(&String.to_integer/1)
+      |> Enum.reverse()
+    end)
+    |> Enum.map(&predict_next_number/1)
+    |> Enum.sum()
   end
 
   def predict_next_number(numbers) do
