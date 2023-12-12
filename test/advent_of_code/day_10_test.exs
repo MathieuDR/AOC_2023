@@ -3,6 +3,17 @@ defmodule AdventOfCode.Day10Test do
 
   import AdventOfCode.Day10
 
+  @simple """
+  .....
+  .S-7.
+  .|.|.
+  .L-J.
+  .....  
+  """
+
+  test "parse" do
+  end
+
   @tag :skip
   test "part1" do
     input = nil
