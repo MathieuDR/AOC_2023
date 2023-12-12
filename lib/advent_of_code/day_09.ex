@@ -1,25 +1,29 @@
 defmodule AdventOfCode.Day09 do
   def part1(args) do
-    args
-    |> String.split("\n", trim: true)
-    |> Enum.map(fn line ->
-      String.split(line, " ", trim: true)
-      |> Enum.map(&String.to_integer/1)
-    end)
+    parse(args)
     |> Enum.map(&predict_next_number/1)
     |> Enum.sum()
   end
 
   def part2(args) do
-    args
+    parse(args, true)
+    |> Enum.map(&predict_next_number/1)
+    |> Enum.sum()
+  end
+
+  def parse(input, reverse \\ false) do
+    input
     |> String.split("\n", trim: true)
     |> Enum.map(fn line ->
       String.split(line, " ", trim: true)
       |> Enum.map(&String.to_integer/1)
-      |> Enum.reverse()
+      |> then(fn res ->
+        case reverse do
+          true -> Enum.reverse(res)
+          false -> res
+        end
+      end)
     end)
-    |> Enum.map(&predict_next_number/1)
-    |> Enum.sum()
   end
 
   def predict_next_number(numbers) do
